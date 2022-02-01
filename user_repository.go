@@ -6,16 +6,16 @@ import (
 )
 
 type InMemoryUserStorage struct {
- 	lock sync.RWMutex
- 	storage map[string]User
+	lock    sync.RWMutex
+	storage map[string]User
 }
 
 func NewInMemoryUserStorage() *InMemoryUserStorage {
-	
-	return &InMemoryUserStorage {
-		lock: sync.RWMutex{},
+
+	return &InMemoryUserStorage{
+		lock:    sync.RWMutex{},
 		storage: make(map[string]User),
- 	}
+	}
 }
 
 func (s *InMemoryUserStorage) Add(login string, user User) error {

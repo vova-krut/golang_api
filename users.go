@@ -9,38 +9,38 @@ import (
 )
 
 type User struct {
-	Email string
- 	PasswordDigest string
- 	Role string
-	FavoriteCake string
-	BanHistory []Ban
+	Email          string
+	PasswordDigest string
+	Role           string
+	FavoriteCake   string
+	BanHistory     []Ban
 }
 
 type UserRepository interface {
- 	Add(string, User) error
- 	Get(string) (User, error)
- 	Update(string, User) error
- 	Delete(string) (User, error)
+	Add(string, User) error
+	Get(string) (User, error)
+	Update(string, User) error
+	Delete(string) (User, error)
 }
 
 type UserService struct {
- 	repository UserRepository
+	repository UserRepository
 }
 
 type UserRegisterParams struct {
- 	// If it looks strange, read about golang struct tags
- 	Email string `json:"email"`
- 	Password string `json:"password"`
- 	FavoriteCake string `json:"favorite_cake"`
+	// If it looks strange, read about golang struct tags
+	Email        string `json:"email"`
+	Password     string `json:"password"`
+	FavoriteCake string `json:"favorite_cake"`
 }
 
 type UserChangeParams struct {
-	Email string `json:"email"`
- 	Password string `json:"password"`
- 	FavoriteCake string `json:"favorite_cake"`
-	New_Email string `json:"new_email"`
- 	New_Password string `json:"new_password"`
- 	New_FavoriteCake string `json:"new_favorite_cake"`
+	Email            string `json:"email"`
+	Password         string `json:"password"`
+	FavoriteCake     string `json:"favorite_cake"`
+	New_Email        string `json:"new_email"`
+	New_Password     string `json:"new_password"`
+	New_FavoriteCake string `json:"new_favorite_cake"`
 }
 
 func validateRegisterParams(p *UserRegisterParams) error {
@@ -77,11 +77,11 @@ func (u *UserService) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	passwordDigest := md5.New().Sum([]byte(params.Password))
-	newUser := User {
-		Email: params.Email,
+	newUser := User{
+		Email:          params.Email,
 		PasswordDigest: string(passwordDigest),
-		FavoriteCake: params.FavoriteCake,
-		Role: "user",
+		FavoriteCake:   params.FavoriteCake,
+		Role:           "user",
 	}
 	err = u.repository.Add(params.Email, newUser)
 	if err != nil {
@@ -110,9 +110,13 @@ func (u *UserService) ShowFavCake(w http.ResponseWriter, r *http.Request) {
 		handleError(err, w)
 		return
 	}
+	if IsBanned(user) {
+		w.WriteHeader(401)
+		w.Write([]byte("u are banned because " + user.BanHistory[len(user.BanHistory)-1].WhyBanned))
+	}
 	if string(passwordDigest) != user.PasswordDigest {
 		handleError(errors.New("invalid password"), w)
-		return 
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(user.FavoriteCake))
@@ -131,9 +135,13 @@ func (u *UserService) ChangeCake(w http.ResponseWriter, r *http.Request) {
 		handleError(err, w)
 		return
 	}
+	if IsBanned(user) {
+		w.WriteHeader(401)
+		w.Write([]byte("u are banned because " + user.BanHistory[len(user.BanHistory)-1].WhyBanned))
+	}
 	if string(passwordDigest) != user.PasswordDigest {
 		handleError(errors.New("invalid password"), w)
-		return 
+		return
 	}
 	new_user := User{user.Email, user.PasswordDigest, user.Role, params.New_FavoriteCake, user.BanHistory}
 	u.repository.Update(user.Email, new_user)
@@ -154,9 +162,13 @@ func (u *UserService) ChangeEmail(w http.ResponseWriter, r *http.Request) {
 		handleError(err, w)
 		return
 	}
+	if IsBanned(user) {
+		w.WriteHeader(401)
+		w.Write([]byte("u are banned because " + user.BanHistory[len(user.BanHistory)-1].WhyBanned))
+	}
 	if string(passwordDigest) != user.PasswordDigest {
 		handleError(errors.New("invalid password"), w)
-		return 
+		return
 	}
 	new_user := User{params.New_Email, user.PasswordDigest, user.Role, user.FavoriteCake, user.BanHistory}
 	u.repository.Delete(user.Email)
@@ -178,9 +190,13 @@ func (u *UserService) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		handleError(err, w)
 		return
 	}
+	if IsBanned(user) {
+		w.WriteHeader(401)
+		w.Write([]byte("u are banned because " + user.BanHistory[len(user.BanHistory)-1].WhyBanned))
+	}
 	if string(passwordDigest) != user.PasswordDigest {
 		handleError(errors.New("invalid password"), w)
-		return 
+		return
 	}
 	newPasswordDigest := md5.New().Sum([]byte(params.New_Password))
 	new_user := User{user.Email, string(newPasswordDigest), user.Role, user.FavoriteCake, user.BanHistory}

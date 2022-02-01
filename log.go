@@ -12,7 +12,7 @@ import (
 type logWriter struct {
 	http.ResponseWriter
 	statusCode int
-	response bytes.Buffer
+	response   bytes.Buffer
 }
 
 func (w *logWriter) WriteHeader(status int) {
@@ -26,8 +26,8 @@ func (w *logWriter) Write(p []byte) (int, error) {
 }
 
 func logRequest(h http.HandlerFunc) http.HandlerFunc {
- 	return func(rw http.ResponseWriter, r *http.Request) {
- 		writer := &logWriter{
+	return func(rw http.ResponseWriter, r *http.Request) {
+		writer := &logWriter{
 			ResponseWriter: rw,
 		}
 		body, err := ioutil.ReadAll(r.Body)
@@ -40,6 +40,6 @@ func logRequest(h http.HandlerFunc) http.HandlerFunc {
 		started := time.Now()
 		h(writer, r)
 		done := time.Since(started)
-		log.Printf("PATH: %s -> %d. Finished in %v.\n\tParams: % s\n\tResponse: %s", r.URL.Path, writer.statusCode, done, string(body), writer.response.String(),)
- 	}
+		log.Printf("PATH: %s -> %d. Finished in %v.\n\tParams: % s\n\tResponse: %s", r.URL.Path, writer.statusCode, done, string(body), writer.response.String())
+	}
 }
